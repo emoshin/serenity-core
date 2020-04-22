@@ -294,6 +294,7 @@ public enum ThucydidesSystemProperty {
     @Deprecated
     THUCYDIDES_EXCLUDE_UNRELATED_REQUIREMENTS_OF_TYPE,
 
+    @Deprecated
     SERENITY_EXCLUDE_UNRELATED_REQUIREMENTS_OF_TYPE,
 
     @Deprecated
@@ -670,7 +671,7 @@ public enum ThucydidesSystemProperty {
     /**
      * Enable JQuery integration.
      * If set to true, JQuery will be injected into any page that does not already have it.
-     * This option is deactivated by default, as it can slow down page loading.
+     * This option is activated by default, deactivating can speed up the page loading.
      */
     SERENITY_JQUERY_INTEGRATION,
 
@@ -806,7 +807,11 @@ public enum ThucydidesSystemProperty {
     THUCYDIDES_LOGGING,
 
     /**
-     * Three levels are supported: QUIET, NORMAL and VERBOSE
+     * Four levels are supported: NONE, QUIET, NORMAL and VERBOSE
+     *   - NONE: Disable Serenity logging
+     *   - QUIET: Only report compromised tests, errors and failures.
+     *   - NORMAL: Log the start and end of each test, and the result of each test.
+     *   - VERBOSE: Log the start and end of each test, and the result of each test, and each test step.
      */
     SERENITY_LOGGING,
 
@@ -980,9 +985,16 @@ public enum ThucydidesSystemProperty {
     /**
      * If provided, only classes and/or methods with tags in this list will be executed. The parameter expects
      * a tag or comma-separated list of tags in the shortened form.
+     * This only works for JUnit tests. For Cucumber, use the -Dcucumber.options parameter
      * For example, -Dtags="iteration:I1" or -Dtags="color:red,flavor:strawberry"
      */
     TAGS,
+
+
+    /**
+     * Display only test results and requirements containing any of the specified tags
+     */
+    REPORT_ON_TAGS,
 
     /**
      * If provided, each test in a test run will have these tags added.
@@ -1018,13 +1030,27 @@ public enum ThucydidesSystemProperty {
     THUCYDIDES_CONSOLE_HEADINGS,
 
     /**
+     * Write the console banner using ascii-art ("ascii", default value) or in smaller text ("normal")
+     */
+    SERENITY_CONSOLE_BANNER,
+
+    /**
      * Write the console headings using ascii-art ("ascii", default value) or in normal text ("normal")
      */
     SERENITY_CONSOLE_HEADINGS,
 
     @Deprecated
     THUCYDIDES_CONSOLE_COLORS,
+
+    /**
+     * Use ASCII color codes when outputing the console logs.
+     */
     SERENITY_CONSOLE_COLORS,
+
+    /**
+     * Set to true to write the chronological number of each test as it is executed to the console
+     */
+    SERENITY_DISPLAY_TEST_NUMBERS,
 
     /**
      * If set to true, Asciidoc formatting will be supported in the narrative texts.
@@ -1094,6 +1120,11 @@ public enum ThucydidesSystemProperty {
      * screenshot page. This results in a loss of quality but a gain in disk space.
      */
     SERENITY_COMPRESS_SCREENSHOTS,
+
+    /**
+     * If set, Serenity will use full page screenshot strategy.
+     */
+    SERENITY_FULL_PAGE_SCREENSHOT_STRATEGY,
 
     /**
      * If set, this will define the list of tag types to be excluded from the dashboard screens

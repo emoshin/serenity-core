@@ -78,8 +78,10 @@ class SerenityPlugin implements Plugin<Project> {
                 List<String> extendedReportTypes = project.serenity.reports
                 if (extendedReportTypes) {
                     for (ExtendedReport report : ExtendedReports.named(extendedReportTypes)) {
-                        generatedReport = report.generateReportFrom(reportDirectory).toPath()
-                        logger.lifecycle("  - ${report.description}: ${generatedReport.toURI()}")
+                        report.sourceDirectory = reportDirectory
+                        report.outputDirectory = reportDirectory
+                        URI reportPath = absolutePathOf(report.generateReport()).toUri()
+                        logger.lifecycle("  - ${report.description}: ${reportPath}")
                     }
                 }
             }
@@ -89,15 +91,13 @@ class SerenityPlugin implements Plugin<Project> {
             group = 'Serenity BDD'
             description = "Checks the Serenity reports and fails the build if there are test failures (run automatically with 'check')"
 
-            def reportDirectory = prepareReportDirectory(project)
-
-            log.info("SerenityPlugin:checkOutcomes: reportDirectory = ${reportDirectory.toUri()}")
+            Path reportDirectory = prepareReportDirectory(project)
 
             inputs.files(project.fileTree(reportDirectory))
 
             doLast {
                 updateProperties(project)
-                logger.lifecycle("Checking serenity results for ${project.serenity.projectKey} in directory $reportDirectory.toUri()")
+                logger.lifecycle("Checking serenity results for ${project.serenity.projectKey} in directory $reportDirectory")
                 if (reportDirectory.toFile().exists()) {
                     def checker = new ResultChecker(reportDirectory.toFile())
                     checker.checkTestResults()
@@ -150,6 +150,10 @@ class SerenityPlugin implements Plugin<Project> {
         project.tasks.check {
             it.dependsOn 'checkOutcomes'
         }
+    }
+
+    static Path absolutePathOf(Path path) {
+        return Paths.get(System.getProperty("user.dir")).resolve(path)
     }
 
     static Path prepareReportDirectory(Project project) {

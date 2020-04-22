@@ -212,6 +212,18 @@ public class Formatter {
         return wrapTablesInDivs(renderDescription(textWithResults), "example-table example-table-in-summary");
     }
 
+    public String renderDescriptionWithFormattedTables(final String text) {
+        return wrapTablesInDivs(renderDescription(text), "example-table example-table-in-summary");
+    }
+
+    public String renderDescriptionWithFormattedTables(final String text, RequirementsOutcomes requirementsOutcomes) {
+        if (requirementsOutcomes == null) {
+            return wrapTablesInDivs(renderDescription(text), "example-table example-table-in-summary");
+        } else {
+            return renderDescriptionWithEmbeddedResults(text, requirementsOutcomes);
+        }
+    }
+
     public String renderTableDescription(final String text, RequirementsOutcomes requirementsOutcomes) {
         String textWithResults = textWithEmbeddedExampleResults(textWithEmbeddedResults(text, requirementsOutcomes), requirementsOutcomes);
         return wrapTablesInDivs(renderDescription(textWithResults), "example-table-in-scenario");
@@ -269,24 +281,34 @@ public class Formatter {
             String feature = matcher.group(1);
             int exampleLineNumber = Integer.parseInt(matcher.group(2));
 
-            requirementsOutcomes.getTestOutcomes().getOutcomes().stream()
+            Optional<? extends TestOutcome> rowOutome = requirementsOutcomes
+                    .getTestOutcomes()
+                    .getOutcomes()
+                    .stream()
                     .filter(
                             outcome -> outcome.getUserStory().getName().equalsIgnoreCase(feature) && containsMatchingExampleRow(outcome, exampleLineNumber)
-                    ).findFirst()
-                    .ifPresent(
-                            testOutcome -> {
-                                Optional<Integer> matchingRow = testOutcome.getDataTable().getResultRowWithLineNumber(exampleLineNumber);
-                                if (matchingRow.isPresent()) {
-                                    matcher.appendReplacement(newText,
-                                            resultIconFormatter.forResult(testOutcome.getTestSteps().get(matchingRow.get()).getResult(),
-                                                    testOutcome.getHtmlReport()));
-                                } else {
-                                    matcher.appendReplacement(newText, "&nbsp;");
-                                }
-                            });
+                    ).findFirst();
+
+            if (rowOutome.isPresent()) {
+                TestOutcome testOutcome = rowOutome.get();
+                Optional<Integer> matchingRow = testOutcome.getDataTable().getResultRowWithLineNumber(exampleLineNumber);
+                if (matchingRow.isPresent() && rowIsAvailable(testOutcome, matchingRow.get())) {
+                    matcher.appendReplacement(newText,
+                            resultIconFormatter.forResult(testOutcome.getTestSteps().get(matchingRow.get()).getResult(),
+                                    testOutcome.getHtmlReport()));
+                } else {
+                    matcher.appendReplacement(newText, "&nbsp;");
+                }
+            } else {
+                matcher.appendReplacement(newText, "&nbsp;");
+            }
         }
         matcher.appendTail(newText);
         return newText.toString();
+    }
+
+    private boolean rowIsAvailable(TestOutcome testOutcome, Integer row) {
+        return (testOutcome.getTestSteps().size() > row);
     }
 
     private boolean containsMatchingExampleRow(TestOutcome outcome, int exampleLineNumber) {

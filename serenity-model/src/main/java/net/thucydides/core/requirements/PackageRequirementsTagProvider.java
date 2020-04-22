@@ -93,7 +93,7 @@ public class PackageRequirementsTagProvider extends AbstractRequirementsTagProvi
     }
 
     private void fetchRequirements() {
-        logger.info("Loading requirements from package requirements at: " + rootPackage);
+        logger.debug("Loading requirements from package requirements at: " + rootPackage);
 
         requirements = reloadedRequirements().orElse(requirementsReadFromClasspath()
                 .orElse(NO_REQUIREMENTS));
@@ -115,7 +115,7 @@ public class PackageRequirementsTagProvider extends AbstractRequirementsTagProvi
             List<String> requirementPaths = requirementPathsStartingFrom(rootPackage);
             int requirementsDepth = longestPathIn(requirementPaths);
 
-            Set<Requirement> allRequirements = new HashSet();
+            Set<Requirement> allRequirements = new HashSet<>();
             for (String path : requirementPaths) {
                 addRequirementsDefinedIn(path, requirementsDepth, allRequirements);
             }
@@ -125,7 +125,6 @@ public class PackageRequirementsTagProvider extends AbstractRequirementsTagProvi
             if (!allRequirements.isEmpty()) {
                 classpathRequirements = new ArrayList<>(allRequirements);
                 Collections.sort(classpathRequirements);
-
                 requirementsStore.write(classpathRequirements);
             }
 
@@ -292,14 +291,6 @@ public class PackageRequirementsTagProvider extends AbstractRequirementsTagProvi
         return AllRequirements.asStreamFrom(getRequirements())
                 .filter(requirement -> requirement.getChildren().contains(child))
                 .findFirst();
-//
-//
-//        for (Requirement requirement : AllRequirements.in(requirements)) {
-//            if (requirement.getChildren().contains(child)) {
-//                return Optional.of(requirement);
-//            }
-//        }
-//        return Optional.empty();
     }
 
     private static File getRequirementsDirectory(File directory) {

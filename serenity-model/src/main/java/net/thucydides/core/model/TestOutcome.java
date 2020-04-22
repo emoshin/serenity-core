@@ -371,7 +371,7 @@ public class TestOutcome {
         return this;
     }
 
-    public TestOutcome asManualTest() {
+    public TestOutcome setToManual() {
         this.manual = true;
         addTag(TestTag.withName("manual").andType("tag"));
         return this;
@@ -473,7 +473,8 @@ public class TestOutcome {
                 this.manualTestEvidence,
                 this.projectKey,
                 this.environmentVariables,
-                this.externalLink);
+                this.externalLink,
+                this.context);
     }
 
     protected TestOutcome(final ZonedDateTime startTime,
@@ -503,7 +504,8 @@ public class TestOutcome {
                           final List<String> testEvidence,
                           final String projectKey,
                           final EnvironmentVariables environmentVariables,
-                          final ExternalLink externalLink) {
+                          final ExternalLink externalLink,
+    final String context) {
         this.startTime = startTime;
         this.duration = duration;
         this.title = title;
@@ -536,7 +538,8 @@ public class TestOutcome {
         this.lastTested = lastTested;
         this.projectKey = projectKey;
         this.environmentVariables = environmentVariables;
-        this.externalLink = this.externalLink;
+        this.externalLink = externalLink;
+        this.context=context;
     }
 
     private List<String> removeDuplicates(List<String> issues) {
@@ -591,7 +594,8 @@ public class TestOutcome {
                     this.manualTestEvidence,
                     this.projectKey,
                     this.environmentVariables,
-                    this.externalLink);
+                    this.externalLink,
+                    this.context);
         } else {
             return this;
         }
@@ -625,7 +629,8 @@ public class TestOutcome {
                 this.manualTestEvidence,
                 this.projectKey,
                 this.environmentVariables,
-                this.externalLink);
+                this.externalLink,
+                this.context);
     }
 
     public TestOutcome withTags(Set<TestTag> tags) {
@@ -656,7 +661,8 @@ public class TestOutcome {
                 this.manualTestEvidence,
                 this.projectKey,
                 this.environmentVariables,
-                this.externalLink);
+                this.externalLink,
+                this.context);
     }
 
     public TestOutcome withMethodName(String methodName) {
@@ -688,7 +694,8 @@ public class TestOutcome {
                     this.manualTestEvidence,
                     this.projectKey,
                     this.environmentVariables,
-                    this.externalLink);
+                    this.externalLink,
+                    this.context);
         } else {
             return this;
         }
@@ -875,7 +882,8 @@ public class TestOutcome {
                 this.manualTestEvidence,
                 this.projectKey,
                 this.environmentVariables,
-                this.externalLink);
+                this.externalLink,
+                this.context);
     }
 
     public void updateTopLevelStepResultsTo(TestResult result) {
@@ -986,6 +994,10 @@ public class TestOutcome {
         } else {
             this.externalLink = externalLink;
         }
+    }
+
+    public boolean hasNoSteps() {
+        return (testSteps == null || testSteps.isEmpty());
     }
 
     private static class TestOutcomeWithEnvironmentBuilder {
@@ -1215,12 +1227,14 @@ public class TestOutcome {
     }
 
     private List<TestStep> annotatedStepsFrom(List<TestStep> testSteps) {
-        if (isManual()) { // && annotatedResult != null) {
+        // For manual tests, all top level steps respect the manual test result if defined
+        if (isManual()) {
             return testSteps.stream().map(
-                    step -> step.withResult(getResult())
+                    step -> step.withResult(getResult()).asManual()
             ).collect(Collectors.toList());
+        } else {
+            return testSteps;
         }
-        return testSteps;
     }
 
     public boolean hasScreenshots() {
@@ -1324,11 +1338,11 @@ public class TestOutcome {
             return result;
         }
 
-        if ((TestResult.IGNORED == annotatedResult) || (TestResult.SKIPPED == annotatedResult) || TestResult.PENDING == annotatedResult) {
+        if (isManual() && (annotatedResult != null)) {
             return annotatedResult;
         }
 
-        if (isManual() && (annotatedResult != null)) {
+        if ((TestResult.IGNORED == annotatedResult) || (TestResult.SKIPPED == annotatedResult) || TestResult.PENDING == annotatedResult) {
             return annotatedResult;
         }
 
@@ -2033,11 +2047,21 @@ public class TestOutcome {
     private int countDataRowsWithResult(TestResult expectedResult, TestType expectedType) {
         int matchingRowCount = 0;
         if (typeCompatibleWith(expectedType)) {
-            for (DataTableRow row : getDataTable().getRows()) {
-                matchingRowCount += (row.getResult() == expectedResult) ? 1 : 0;
+            if (resultsAreUndefinedIn(getDataTable())) {
+                for (TestStep step : getTestSteps()) {
+                    matchingRowCount += (step.getResult() == expectedResult) ? 1 : 0;
+                }
+            } else {
+                for (DataTableRow row : getDataTable().getRows()) {
+                    matchingRowCount += (row.getResult() == expectedResult) ? 1 : 0;
+                }
             }
         }
         return matchingRowCount;
+    }
+
+    private boolean resultsAreUndefinedIn(DataTable dataTable) {
+        return dataTable.getRows().stream().allMatch( row -> row.getResult() == TestResult.UNDEFINED);
     }
 
     public int countNestedStepsWithResult(TestResult expectedResult, TestType testType) {
@@ -2690,7 +2714,8 @@ public class TestOutcome {
                 manualTestEvidence,
                 projectKey,
                 environmentVariables,
-                externalLink);
+                externalLink,
+                context);
     }
 
     public ExternalLink getExternalLink() {

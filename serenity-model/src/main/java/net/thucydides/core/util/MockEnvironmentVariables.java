@@ -89,7 +89,11 @@ public class MockEnvironmentVariables implements EnvironmentVariables {
     }
 
     public String getProperty(String name) {
-        return properties.getProperty(name);
+        if (name != null) {
+            return properties.getProperty(name);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -171,6 +175,11 @@ public class MockEnvironmentVariables implements EnvironmentVariables {
                 key -> environmentValues.put(key, properties.getProperty(key))
         );
         return environmentValues;
+    }
+
+    @Override
+    public Map<String, String> simpleSystemPropertiesAsMap() {
+        return new HashMap<>();
     }
 
     public void setValue(String name, String value) {

@@ -13,6 +13,7 @@ import net.thucydides.core.model.formatters.TestCoverageFormatter;
 import net.thucydides.core.requirements.RequirementsService;
 import net.thucydides.core.requirements.RequirementsTree;
 import net.thucydides.core.requirements.model.Requirement;
+import net.thucydides.core.steps.TestSourceType;
 import net.thucydides.core.tags.OutcomeTagFilter;
 import net.thucydides.core.util.EnvironmentVariables;
 import net.thucydides.core.util.Inflector;
@@ -76,22 +77,6 @@ public class TestOutcomes {
         this.label = label;
         this.testTag = testTag;
         this.resultFilter = resultFilter;
-        this.rootOutcomes = Optional.ofNullable(rootOutcomes);
-        this.environmentVariables = environmentVariables;
-        this.requirementsService = Injectors.getInjector().getInstance(RequirementsService.class);
-    }
-
-    protected TestOutcomes(Collection<? extends TestOutcome> outcomes,
-                           double estimatedAverageStepCount,
-                           String label,
-                           TestOutcomes rootOutcomes,
-                           EnvironmentVariables environmentVariables) {
-        outcomeCount = outcomeCount + outcomes.size();
-        this.outcomes = Collections.unmodifiableList(sorted(outcomes));
-        this.estimatedAverageStepCount = estimatedAverageStepCount;
-        this.label = label;
-        this.testTag = null;
-        this.resultFilter = null;
         this.rootOutcomes = Optional.ofNullable(rootOutcomes);
         this.environmentVariables = environmentVariables;
         this.requirementsService = Injectors.getInjector().getInstance(RequirementsService.class);
@@ -410,7 +395,7 @@ public class TestOutcomes {
         return getTags().contains(testTag);
     }
 
-    public boolean containsTagMatching(TestTag containedTag) {
+    public boolean containsMatchingTag(TestTag containedTag) {
         return getTags().stream().anyMatch(
                 tag -> tag.isAsOrMoreSpecificThan(containedTag) || containedTag.isAsOrMoreSpecificThan(tag)
         );
@@ -471,14 +456,18 @@ public class TestOutcomes {
             return (int) stepsWithResultIn(outcome.getTestSteps(), expectedResults);
         }
 
-        if (dataTableRowResultsAreUndefinedIn(outcome.getDataTable())
-            && outcome.getTestSteps().size() == outcome.getDataTable().getSize()) {
+        if ((dataTableRowResultsAreUndefinedIn(outcome.getDataTable()) || isJUnit(outcome))
+            && outcome.getTestSteps().size() >= outcome.getDataTable().getSize()) {
             return (int) stepsWithResultIn(outcome.getTestSteps(), expectedResults);
         }
 
         return (int) outcome.getDataTable().getRows().stream()
                 .filter(row -> expectedResults.contains(row.getResult()))
                 .count();
+    }
+
+    private boolean isJUnit(TestOutcome outcome) {
+        return (outcome.getTestSource() == null) || (TestSourceType.TEST_SOURCE_JUNIT.getValue().equalsIgnoreCase(outcome.getTestSource()));
     }
 
     private long stepsWithResultIn(List<TestStep> steps, List<TestResult> expectedResults) {
@@ -565,6 +554,13 @@ public class TestOutcomes {
             return outcome.getDuration();
         }
     }
+
+    public boolean containTestFor(Requirement requirement) {
+        return requirement.getTags().stream().anyMatch(
+                this::containsMatchingTag
+        );
+    }
+
     private static class TagFinder {
         private final String tagType;
 
@@ -688,7 +684,7 @@ public class TestOutcomes {
     }
 
     public String getResultFilterName() {
-        return resultFilter.name();
+        return (resultFilter != null) ? resultFilter.name() : "";
     }
 
     public TestOutcomes getUnsuccessfulTests() {

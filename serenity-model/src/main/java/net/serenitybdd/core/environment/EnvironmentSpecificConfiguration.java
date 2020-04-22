@@ -1,5 +1,6 @@
 package net.serenitybdd.core.environment;
 
+import net.thucydides.core.ThucydidesSystemProperty;
 import net.thucydides.core.util.EnvironmentVariables;
 
 import java.util.List;
@@ -62,8 +63,7 @@ public class EnvironmentSpecificConfiguration {
         NO_ENVIRONMENT_DEFINED
     }
 
-    private Function<String, String> contextlessProperty = property
-            -> environmentVariables.getProperty(property);
+    private Function<String, String> contextlessProperty = property -> environmentVariables.getProperty(property);
 
     private Function<String, String> defaultProperty = property -> {
 
@@ -119,6 +119,9 @@ public class EnvironmentSpecificConfiguration {
         );
     }
 
+    public Optional<String> getOptionalProperty(final ThucydidesSystemProperty propertyName) {
+        return getOptionalProperty(propertyName.getPropertyName(), propertyName.getLegacyPropertyName());
+    }
 
     public Optional<String> getOptionalProperty(String... propertyNames) {
 
