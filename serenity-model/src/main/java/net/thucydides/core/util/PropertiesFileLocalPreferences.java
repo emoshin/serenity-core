@@ -42,7 +42,7 @@ public class PropertiesFileLocalPreferences implements LocalPreferences {
         this.homeDirectory = new File(System.getProperty("user.home"));
         this.workingDirectory = new File(System.getProperty("user.dir"));
         final String mavenBuildDir = System.getProperty(SystemPropertiesConfiguration.PROJECT_BUILD_DIRECTORY);
-        if (!StringUtils.isEmpty(mavenBuildDir)) {
+        if (!isEmpty(mavenBuildDir)) {
             this.mavenModuleDirectory = new File(mavenBuildDir);
         } else {
             this.mavenModuleDirectory = this.workingDirectory;
@@ -112,10 +112,19 @@ public class PropertiesFileLocalPreferences implements LocalPreferences {
 
     private Config typesafeConfigFile(File configFile) {
 
-        Config commandLineSpecifiedProperties = ConfigFactory.parseMap(environmentVariables.simpleSystemPropertiesAsMap());
-
         // TODO: Cache resolved config for the aggregate phase
-        return ConfigFactory.parseFile(configFile).resolveWith(commandLineSpecifiedProperties);
+        try {
+            return ConfigFactory.parseFile(configFile).resolveWith(ConfigFactory.systemProperties());
+        } catch (ConfigException failedToReadTheSerenityConfFile) {
+            try {
+                LOGGER.warn("Failed to read the serenity.conf file: " + failedToReadTheSerenityConfFile.getMessage()
+                        + " - Falling back on serenity.conf without using environment variables");
+                return ConfigFactory.parseFile(configFile);
+            } catch (ConfigException failedToReadTheUnresolvedSerenityConfFile) {
+                LOGGER.error("Failed to parse the serenity.conf file", failedToReadTheUnresolvedSerenityConfFile);
+                throw failedToReadTheUnresolvedSerenityConfFile;
+            }
+        }
 
     }
 
@@ -152,7 +161,7 @@ public class PropertiesFileLocalPreferences implements LocalPreferences {
             String localPropertyValue = localPreferences.getProperty(propertyName);
             String currentPropertyValue = environmentVariables.getProperty(propertyName);
 
-            if ((currentPropertyValue == null) && (localPropertyValue != null)) {
+            if (isEmpty(currentPropertyValue) && isNotEmpty(localPropertyValue)) {
                 LOGGER.debug(propertyName + "=" + localPropertyValue);
                 environmentVariables.setProperty(propertyName, localPropertyValue);
             }
@@ -198,9 +207,8 @@ public class PropertiesFileLocalPreferences implements LocalPreferences {
 
         List<String> possibleConfigFileNames = new ArrayList<>();
 
-        environmentVariables.optionalProperty(System.getProperty(PROPERTIES)).ifPresent(
-                possibleConfigFileNames::add
-        );
+        optionalEnvironmentVariable(System.getProperty(PROPERTIES)).ifPresent(possibleConfigFileNames::add);
+
         serenityConfFileInASensibleLocation().ifPresent(possibleConfigFileNames::add);
 
         return possibleConfigFileNames.stream()
@@ -213,7 +221,7 @@ public class PropertiesFileLocalPreferences implements LocalPreferences {
 
     private Optional<String> serenityConfFileInASensibleLocation() {
         try {
-            return SearchForFilesWithName.matching(Paths.get("."),SERENITY_CONF_FILE).getMatchingFiles()
+            return SearchForFilesWithName.matching(Paths.get("."), SERENITY_CONF_FILE).getMatchingFiles()
                     .stream()
                     .findFirst()
                     .map(path -> path.toAbsolutePath().toString());

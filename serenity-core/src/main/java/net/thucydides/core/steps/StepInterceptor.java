@@ -11,6 +11,7 @@ import net.serenitybdd.core.environment.ConfiguredEnvironment;
 import net.serenitybdd.core.exceptions.SerenityManagedException;
 import net.serenitybdd.core.steps.HasCustomFieldValues;
 import net.serenitybdd.markers.CanBeSilent;
+import net.serenitybdd.markers.IsHidden;
 import net.serenitybdd.markers.IsSilent;
 import net.thucydides.core.ThucydidesSystemProperty;
 import net.thucydides.core.annotations.*;
@@ -45,7 +46,7 @@ import static net.thucydides.core.steps.ErrorConvertor.forError;
  *
  * @author johnsmart
  */
-public class StepInterceptor implements MethodErrorReporter {
+public class StepInterceptor implements MethodErrorReporter,Interceptor {
 
     private final Class<?> testStepClass;
     private Throwable error = null;
@@ -95,7 +96,8 @@ public class StepInterceptor implements MethodErrorReporter {
         boolean isACoreLanguageMethod = (OBJECT_METHODS.contains(method.getName()));
         boolean methodDoesNotComeFromThisClassOrARelatedParentClass = !declaredInSameDomain(method, callingClass);
         boolean isSilentMethod = isSilent(callingClass, method, obj);
-        return (isACoreLanguageMethod || methodDoesNotComeFromThisClassOrARelatedParentClass || isSilentMethod);
+        boolean isHiddenMethod = isHidden(callingClass);
+        return (isACoreLanguageMethod || methodDoesNotComeFromThisClassOrARelatedParentClass || isSilentMethod || isHiddenMethod);
     }
 
     private boolean isSilent(Class callingClass, Method method, Object obj) {
@@ -116,6 +118,10 @@ public class StepInterceptor implements MethodErrorReporter {
         }
 
         return false;
+    }
+
+    private boolean isHidden(Class<?> callingClass) {
+        return IsHidden.class.isAssignableFrom(callingClass);
     }
 
     private boolean isNotAStepAnnotatedMethodWhenManualInstrumentationIsActive(Method method) {

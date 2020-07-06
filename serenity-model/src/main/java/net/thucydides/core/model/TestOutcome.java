@@ -246,6 +246,12 @@ public class TestOutcome {
     private ExternalLink externalLink;
 
     /**
+     * An indication of the order of appearance that this scenario should appear in the story or feature.
+     * Used for JUnit tests.
+     */
+    private Integer order;
+
+    /**
      * Fields used for serialization
      */
     TestResult result;
@@ -256,7 +262,6 @@ public class TestOutcome {
      * Scenario outline text.
      */
     private String scenarioOutline;
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestOutcome.class);
 
@@ -434,6 +439,7 @@ public class TestOutcome {
         this.flagProvider = Injectors.getInjector().getInstance(FlagProvider.class);
         this.environmentVariables = environmentVariables;
         this.context = contextFrom(environmentVariables);
+        this.order = TestCaseOrder.definedIn(testCase, name);
 
         this.projectKey = ThucydidesSystemProperty.THUCYDIDES_PROJECT_KEY.from(environmentVariables, "");
     }
@@ -743,11 +749,11 @@ public class TestOutcome {
     }
 
     public TitleBuilder getUnqualified() {
-        return new TitleBuilder(this, issueTracking, environmentVariables, false);
+        return new TitleBuilder(this, issueTracking, getEnvironmentVariables(), false);
     }
 
     public TitleBuilder getQualified() {
-        return new TitleBuilder(this, issueTracking, environmentVariables, true);
+        return new TitleBuilder(this, issueTracking, getEnvironmentVariables(), true);
     }
 
     public void setAllStepsTo(TestResult result) {
@@ -1917,7 +1923,7 @@ public class TestOutcome {
 
     public List<String> getIssueKeys() {
         return getIssues().stream()
-                .map(issue -> IssueKeyFormat.forEnvironment(environmentVariables).andKey(issue))
+                .map(issue -> IssueKeyFormat.forEnvironment(getEnvironmentVariables()).andKey(issue))
                 .collect(Collectors.toList());
     }
 
@@ -1947,10 +1953,18 @@ public class TestOutcome {
 
     public String getContext() {
         if (context == null) {
-            context = contextFrom(environmentVariables);
+            context = contextFrom(getEnvironmentVariables());
         }
 
         return context;
+    }
+    
+    /**
+     * Setting the context
+     * @param context
+     */
+    public void setContext(String context) {
+    	this.context = context;
     }
 
     /**
@@ -2720,5 +2734,14 @@ public class TestOutcome {
 
     public ExternalLink getExternalLink() {
         return externalLink;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public Integer getOrder() {
+        if (order == null) { return 0; }
+        return order;
     }
 }
