@@ -58,6 +58,11 @@ public enum ThucydidesSystemProperty {
     USE_CHROME_AUTOMATION_OPTIONS,
 
     /**
+     * If the automatic webdriver download should happen.
+     */
+    WEBDRIVER_AUTODOWNLOAD,
+
+    /**
      * The driver to be used for remote drivers
      */
     WEBDRIVER_REMOTE_DRIVER,
@@ -1064,7 +1069,7 @@ public enum ThucydidesSystemProperty {
 
     /**
      * What format should test results be generated in.
-     * By default, this is "json,xml".
+     * By default, this is "json, html".
      */
     OUTPUT_FORMATS,
 

@@ -10,6 +10,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.WrapsElement;
 import org.openqa.selenium.interactions.Locatable;
 import org.openqa.selenium.support.ui.Wait;
+
 import java.time.Duration;
 import java.time.temporal.TemporalUnit;
 import java.util.List;
@@ -128,6 +129,8 @@ public interface WebElementFacade extends WebElement, WrapsElement, WebElementSt
      * Wait for an element to be visible and enabled, and then click on it.
      */
     void click();
+
+    void click(ClickStrategy clickStrategy);
 
     void clear();
 
