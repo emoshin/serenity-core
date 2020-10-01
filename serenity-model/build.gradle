@@ -57,16 +57,19 @@ dependencies {
 
     compile ("com.vladsch.flexmark:flexmark-all:0.34.30") {
         exclude group:"org.jsoup", module:"jsoup"
+        exclude group:"junit", module:"junit"
     }
+    compile "junit:junit:${junitVersion}"
     compile 'es.nitaur.markdown:txtmark:0.16'
 
-    compileOnly "org.junit.jupiter:junit-jupiter-api:${junit5_version}"
+    compileOnly "org.junit.jupiter:junit-jupiter-api:${junit5Version}"
 
     testCompile project(':serenity-test-utils')
     testCompile project(':serenity-sample-alternative-resources')
     testCompile("org.spockframework:spock-core:${spockVersion}") {
         exclude group: "junit"
         exclude group: "org.codehaus.groovy"
+        exclude group: "org.junit.platform"
     }
-    testCompile "org.junit.jupiter:junit-jupiter-api:${junit5_version}"
+    testCompile "org.junit.jupiter:junit-jupiter-api:${junit5Version}"
 }
