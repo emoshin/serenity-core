@@ -25,6 +25,7 @@ import net.thucydides.core.model.stacktrace.FailureCause;
 import net.thucydides.core.model.stacktrace.RootCauseAnalyzer;
 import net.thucydides.core.reports.json.JSONConverter;
 import net.thucydides.core.reports.remoteTesting.LinkGenerator;
+import net.thucydides.core.requirements.reports.ScenarioOutcome;
 import net.thucydides.core.screenshots.ScreenshotAndHtmlSource;
 import net.thucydides.core.statistics.service.TagProvider;
 import net.thucydides.core.statistics.service.TagProviderService;
@@ -61,7 +62,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 /**
  * Represents the results of a test (or "scenario") execution. This
  * includes the narrative steps taken during the test, screenshots at each step,
- * the results of each step, and the overall result. A test scenario
+ * the results of each step, and the overall result. A test getscenario
  * can be associated with a user story using the UserStory annotation.
  * <p/>
  * A TestOutcome is stored after a test is executed. When the aggregate reports
@@ -139,6 +140,8 @@ public class TestOutcome {
      * Identifies the project associated with this test.
      */
     private String project;
+
+    private Rule rule;
 
     private FailureCause testFailureCause;
     private TestFailureCause flakyTestFailureCause;
@@ -405,7 +408,9 @@ public class TestOutcome {
     public EnvironmentVariables getEnvironmentVariables() {
         if (environmentVariables == null) {
             environmentVariables = Injectors.getInjector().getProvider(EnvironmentVariables.class).get();
-            this.context = contextFrom(environmentVariables);
+            if(this.context==null){
+                this.context = contextFrom(environmentVariables);
+            }
         }
         return environmentVariables;
     }
@@ -1784,6 +1789,14 @@ public class TestOutcome {
     public TestOutcome forProject(String project) {
         this.project = project;
         return this;
+    }
+
+    public Rule getRule() {
+        return rule;
+    }
+
+    public void setRule(Rule rule) {
+        this.rule = rule;
     }
 
     public String getProject() {

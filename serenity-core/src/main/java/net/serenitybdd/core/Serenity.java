@@ -111,7 +111,7 @@ public class Serenity {
     }
 
 
-    private static void initStepListener() {
+    public static void initStepListener() {
         Configuration configuration = ConfiguredEnvironment.getConfiguration();
         File outputDirectory = configuration.getOutputDirectory();
         StepListener listener  = new BaseStepListener(outputDirectory, getPages());
@@ -186,7 +186,7 @@ public class Serenity {
         return null;
     }
 
-    protected static WebDriver getDriver() {
+    public static WebDriver getDriver() {
         return getWebdriverManager().getWebdriver();
     }
 

@@ -7,10 +7,7 @@ import io.cucumber.messages.Messages.GherkinDocument.Feature.Scenario;
 import io.cucumber.messages.Messages.GherkinDocument.Feature.Scenario.Examples;
 import net.thucydides.core.ThucydidesSystemProperty;
 import net.thucydides.core.guice.Injectors;
-import net.thucydides.core.model.TestOutcome;
-import net.thucydides.core.model.TestResult;
-import net.thucydides.core.model.TestResultList;
-import net.thucydides.core.model.TestTag;
+import net.thucydides.core.model.*;
 import net.thucydides.core.reports.TestOutcomes;
 import net.thucydides.core.reports.html.CucumberTagConverter;
 import net.thucydides.core.reports.html.ReportNameProvider;
@@ -65,19 +62,38 @@ public class FeatureFileScenarioOutcomes {
             return Collections.emptyList();
         } else {
             List<ScenarioOutcome> scenarioOutcomes = new ArrayList<>();
-            feature.get().getFeature().getChildrenList().forEach(
-                    featureChildren -> scenarioOutcomes.add(
-                            scenarioOutcomeFrom(feature.get().getFeature(),
-                                    featureChildren.getScenario(),
-                                    requirementsOutcomes.getTestOutcomes()))
-            );
+            Feature currentFeature = feature.get().getFeature();
+            for(Feature.FeatureChild currentChild : currentFeature.getChildrenList()) {
+                if(currentChild.hasRule()) {
+                    Feature.FeatureChild.Rule currentRule = currentChild.getRule();
+                    currentRule.getChildrenList().forEach(
+                            ruleChildren -> scenarioOutcomes.add(
+                                            scenarioOutcomeFrom(currentFeature,
+                                                    ruleChildren.getScenario(),
+                                                    requirementsOutcomes.getTestOutcomes(),new Rule(currentRule.getName(),currentRule.getDescription()))));
+                } else {
+                    if(currentChild.hasScenario()) {
+                        scenarioOutcomes.add(
+                                scenarioOutcomeFrom(currentFeature,
+                                        currentChild.getScenario(),
+                                        requirementsOutcomes.getTestOutcomes()));
+                    }
+                }
+            }
             return scenarioOutcomes;
         }
     }
 
     private ScenarioOutcome scenarioOutcomeFrom(Feature feature,
+                                            Scenario scenario,
+                                            TestOutcomes testOutcomes) {
+        return scenarioOutcomeFrom(feature,scenario,testOutcomes, null);
+    }
+
+
+    private ScenarioOutcome scenarioOutcomeFrom(Feature feature,
                                                 Scenario scenario,
-                                                TestOutcomes testOutcomes) {
+                                                TestOutcomes testOutcomes, Rule rule) {
 
         List<TestOutcome> outcomes = testOutcomes.testOutcomesWithName(scenario.getName());
 
@@ -144,7 +160,8 @@ public class FeatureFileScenarioOutcomes {
                 feature.getName(),
                 featureReport,
                 scenarioTags,
-                exampleTags);
+                exampleTags,
+                rule);
     }
 
     private Set<TestTag> scenarioTagsDefinedIn(Scenario scenario) {
