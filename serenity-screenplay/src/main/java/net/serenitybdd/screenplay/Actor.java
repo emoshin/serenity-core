@@ -14,9 +14,7 @@ import net.thucydides.core.annotations.Step;
 import net.thucydides.core.guice.Injectors;
 import net.thucydides.core.steps.ExecutedStepDescription;
 import net.thucydides.core.steps.StepEventBus;
-import net.thucydides.core.steps.StepListener;
 import net.thucydides.core.util.EnvironmentVariables;
-import org.openqa.selenium.Keys;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -202,6 +200,7 @@ public class Actor implements PerformsTasks, SkipNested {
         }
     }
 
+    @Override
     public <ANSWER> ANSWER asksFor(Question<ANSWER> question) {
         beginPerformance();
         ANSWER answer = question.answeredBy(this);
@@ -281,12 +280,12 @@ public class Actor implements PerformsTasks, SkipNested {
         return e.getClass().getSimpleName().contains("Assumption");
     }
 
-    public final void can(Consequence... consequences) {
+    public final void can(Consequence<?>... consequences) {
         should(consequences);
     }
 
 
-    public final void should(String groupStepName, Consequence... consequences) {
+    public final void should(String groupStepName, Consequence<?>... consequences) {
 
         try {
             String groupTitle = injectActorInto(groupStepName);
@@ -304,15 +303,17 @@ public class Actor implements PerformsTasks, SkipNested {
         return groupStepName.replaceAll("\\{0\\}", this.toString());
     }
 
-    public final void should(Consequence... consequences) {
+    public final void should(List<Consequence<?>> consequences) {
+        should(consequences.toArray(new Consequence[]{}));
+    }
 
-        //if (StepEventBus.getEventBus().isDryRun()) { return; }
+    public final void should(Consequence<?>... consequences) {
 
         ErrorTally errorTally = new ErrorTally(eventBusInterface);
 
         startConsequenceCheck();
 
-        for (Consequence consequence : consequences) {
+        for (Consequence<?> consequence : consequences) {
             check(consequence, errorTally);
         }
 

@@ -311,7 +311,14 @@ public class StepEventBus {
         }
 
         TestLifecycleEvents.postEvent(TestLifecycleEvents.testFinished());
+
         clear();
+    }
+
+    public void finishTestRun() {
+        for (StepListener stepListener : getAllListeners()) {
+            stepListener.testRunFinished();
+        }
     }
 
     public void testFinished() {
@@ -686,6 +693,12 @@ public class StepEventBus {
     public void exampleStarted(Map<String, String> data) {
         for (StepListener stepListener : getAllListeners()) {
             stepListener.exampleStarted(data);
+        }
+    }
+
+    public void exampleStarted(Map<String, String> data, String exampleName) {
+        for (StepListener stepListener : getAllListeners()) {
+            stepListener.exampleStarted(data, exampleName);
         }
     }
 

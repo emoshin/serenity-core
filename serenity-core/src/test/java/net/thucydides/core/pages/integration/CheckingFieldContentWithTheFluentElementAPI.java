@@ -2,18 +2,16 @@ package net.thucydides.core.pages.integration;
 
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import net.thucydides.core.webdriver.WebDriverFacade;
-import net.thucydides.core.webdriver.WebDriverFactory;
 import net.thucydides.core.webdriver.exceptions.ElementShouldBeDisabledException;
 import net.thucydides.core.webdriver.exceptions.ElementShouldBeEnabledException;
 import net.thucydides.core.webdriver.exceptions.ElementShouldBeInvisibleException;
-import net.thucydides.core.webdriver.javascript.ShadowDom;
+import net.thucydides.core.webdriver.javascript.ByShadowDom;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 
 import java.time.temporal.ChronoUnit;
@@ -29,11 +27,10 @@ public class CheckingFieldContentWithTheFluentElementAPI  {
 
     @BeforeClass
     public static void openStaticPage() {
-        WebDriverManager.chromedriver().setup();
-        ChromeOptions options = new ChromeOptions();
-        //options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200");
-        localDriver = new ChromeDriver(options);
-
+        WebDriverManager.firefoxdriver().setup();
+        FirefoxOptions firefoxOptions = new FirefoxOptions();
+        firefoxOptions.setHeadless(true);
+        localDriver = new FirefoxDriver(firefoxOptions);
         page = new StaticSitePage(localDriver);
         page.open();
     }
@@ -263,7 +260,7 @@ public class CheckingFieldContentWithTheFluentElementAPI  {
 
     @Test
     public void should_find_elements_in_shadow_dom() {
-        assertThat(page.find(ShadowDom.of("#myid")).getValue(), is("shadowInputValue"));
+        assertThat(page.find(ByShadowDom.of("#myid")).getValue(), is("shadowInputValue"));
     }
 
 }

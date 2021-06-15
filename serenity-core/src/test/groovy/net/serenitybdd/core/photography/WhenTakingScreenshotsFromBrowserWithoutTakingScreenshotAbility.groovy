@@ -1,11 +1,13 @@
 package net.serenitybdd.core.photography
 
-import com.assertthat.selenium_shutterbug.utils.web.ScrollStrategy
 import net.thucydides.core.screenshots.BlurLevel
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import org.openqa.selenium.WebDriver
 import spock.lang.Specification
+
+import java.nio.file.Files
+import java.nio.file.Path
 
 class WhenTakingScreenshotsFromBrowserWithoutTakingScreenshotAbility extends Specification {
 
@@ -13,8 +15,10 @@ class WhenTakingScreenshotsFromBrowserWithoutTakingScreenshotAbility extends Spe
     TemporaryFolder folder = new TemporaryFolder();
 
     Darkroom darkroom
+    Path darkroomFolder;
 
     def setup() {
+        darkroomFolder = Files.createTempDirectory("tmp")
         darkroom = new Darkroom()
     }
 
@@ -26,7 +30,7 @@ class WhenTakingScreenshotsFromBrowserWithoutTakingScreenshotAbility extends Spe
         given:
             def driver = Mock(WebDriver)
             driver.getTitle() >> "value";
-            def session = new PhotoSession(driver, darkroom, folder.newFolder().toPath(), BlurLevel.NONE, ScrollStrategy.VIEWPORT_ONLY)
+            def session = new PhotoSession(driver, darkroom, darkroomFolder, BlurLevel.NONE)
         when:
             def photo = session.takeScreenshot()
         then:
